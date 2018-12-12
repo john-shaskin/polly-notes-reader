@@ -1,0 +1,3 @@
+{
+  "app": "node bin/polly-notes-reader.js"
+}
