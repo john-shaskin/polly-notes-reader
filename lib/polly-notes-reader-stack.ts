@@ -19,6 +19,5 @@ export class PollyNotesReaderStack extends cdk.Stack {
     });
     // 5. SNS topic to trigger when new notes added
     // 6. Lambda listening to SNS topic that converts the text to mp3 audio
-    // 7. 
   }
 }
