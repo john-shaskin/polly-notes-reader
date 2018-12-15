@@ -1,4 +1,4 @@
-# Polly Reader Lambda Website (via AWS CDK)
+# Polly Notes Reader Lambda Website (via AWS CDK)
 
 ## Useful commands
 
