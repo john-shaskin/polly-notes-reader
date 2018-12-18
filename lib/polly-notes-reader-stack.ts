@@ -27,6 +27,8 @@ export class PollyNotesReaderStack extends cdk.Stack {
       partitionKey: { name: 'id', type: dynamoDb.AttributeType.String }
     });
 
+    // SNS topic to trigger when new notes added
+
     // Managed policy for lambdas to access resources
     const lambdaPolicyStatement = new iam.PolicyStatement(iam.PolicyStatementEffect.Allow);
     lambdaPolicyStatement
@@ -47,15 +49,15 @@ export class PollyNotesReaderStack extends cdk.Stack {
 
     // POST new notes
     const postApiRoot = path.join('components', 'posts', 'api');
-    const newPostsHandler = new lambda.Function(this, 'PostNotesHandler', {
+    const newNotesHandler = new lambda.Function(this, 'PostNotesHandler', {
       runtime: lambda.Runtime.Python27,
       code: lambda.Code.asset(postApiRoot),
-      handler: 'newposts.lambda_handler',
+      handler: 'newnote.lambda_handler',
       environment: {
-        EnvKey1: 'EnvValue1'
+        'SNS_Topic': 'EnvValue1' // TODO: Replace with reference to created SNS topic
       }
     });
-    newPostsHandler.addToRolePolicy(lambdaPolicyStatement);
+    newNotesHandler.addToRolePolicy(lambdaPolicyStatement);
 
     // GET notes
 
@@ -65,9 +67,8 @@ export class PollyNotesReaderStack extends cdk.Stack {
       description: 'This service manages text note posts, and converts them to audio format using Polly.'
     });
 
-    api.root.addMethod('POST', new apigateway.LambdaIntegration(newPostsHandler));
+    api.root.addMethod('POST', new apigateway.LambdaIntegration(newNotesHandler));
 
-    // SNS topic to trigger when new notes added
-    // 6. Lambda listening to SNS topic that converts the text to mp3 audio
+    // Lambda listening to SNS topic that converts the text to mp3 audio
   }
 }
