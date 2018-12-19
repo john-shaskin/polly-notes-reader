@@ -1,9 +1,10 @@
 import cdk = require('@aws-cdk/cdk');
-import dynamoDb = require('@aws-cdk/aws-dynamodb');
-import s3 = require('@aws-cdk/aws-s3');
-import lambda = require('@aws-cdk/aws-lambda');
 import apigateway = require('@aws-cdk/aws-apigateway');
+import dynamoDb = require('@aws-cdk/aws-dynamodb');
+import lambda = require('@aws-cdk/aws-lambda');
 import iam = require('@aws-cdk/aws-iam');
+import s3 = require('@aws-cdk/aws-s3');
+import sns = require('@aws-cdk/aws-sns');
 import path = require('path');
 
 export class PollyNotesReaderStack extends cdk.Stack {
@@ -22,12 +23,15 @@ export class PollyNotesReaderStack extends cdk.Stack {
     new s3.Bucket(this, 'PollyReaderMP3Bucket');
 
     // DynamoDB table to store notes
-    new dynamoDb.Table(this, 'PostsTable', {
-      tableName: 'polly-posts',
+    const notesTable = new dynamoDb.Table(this, 'NotesTable', {
+      tableName: 'polly-notes',
       partitionKey: { name: 'id', type: dynamoDb.AttributeType.String }
     });
 
     // SNS topic to trigger when new notes added
+    const noteCreatedTopic = new sns.Topic(this, 'NoteCreatedSnsTopic', {
+      displayName: 'New Note Created'
+    });
 
     // Managed policy for lambdas to access resources
     const lambdaPolicyStatement = new iam.PolicyStatement(iam.PolicyStatementEffect.Allow);
@@ -48,13 +52,14 @@ export class PollyNotesReaderStack extends cdk.Stack {
       ).addAllResources();
 
     // POST new notes
-    const postApiRoot = path.join('components', 'posts', 'api');
+    const postApiRoot = path.join('components', 'notes', 'api');
     const newNotesHandler = new lambda.Function(this, 'PostNotesHandler', {
       runtime: lambda.Runtime.Python27,
       code: lambda.Code.asset(postApiRoot),
       handler: 'newnote.lambda_handler',
       environment: {
-        'SNS_Topic': 'EnvValue1' // TODO: Replace with reference to created SNS topic
+        'SNS_TOPIC': noteCreatedTopic.topicArn, // TODO: Replace with ARN reference to created SNS topic
+        'DB_TABLE_NAME': notesTable.tableName
       }
     });
     newNotesHandler.addToRolePolicy(lambdaPolicyStatement);
@@ -62,13 +67,15 @@ export class PollyNotesReaderStack extends cdk.Stack {
     // GET notes
 
     // API gateway with lambda endpoints
-    const api = new apigateway.RestApi(this, 'polly-posts-api', {
-      restApiName: 'Polly Posts Service',
-      description: 'This service manages text note posts, and converts them to audio format using Polly.'
+    // TODO: Enable CORS
+    const api = new apigateway.RestApi(this, 'polly-notes-api', {
+      restApiName: 'Polly Notes Service',
+      description: 'This service manages text notes, and converts them to audio format using Polly.'
     });
 
-    api.root.addMethod('POST', new apigateway.LambdaIntegration(newNotesHandler));
-
+    api.root.addMethod('OPTIONS', new apigateway.MockIntegration());
+    const postMethod = api.root.addMethod('POST', new apigateway.LambdaIntegration(newNotesHandler, { proxy: false }));
+    // TODO: Add GET method, enable query string parameters (use mappings.json in body mappings)
     // Lambda listening to SNS topic that converts the text to mp3 audio
   }
 }
