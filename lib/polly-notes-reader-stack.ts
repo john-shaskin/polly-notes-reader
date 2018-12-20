@@ -10,7 +10,6 @@ import path = require('path');
 export class PollyNotesReaderStack extends cdk.Stack {
   constructor(parent: cdk.App, name: string, props?: cdk.StackProps) {
     super(parent, name, props);
-
     // s3 bucket for static public website
     // TODO: How do we push the static content to the s3 bucket on deploy?
     const websiteBucket = new s3.Bucket(this, 'PollyReaderStaticWebsite', {
@@ -70,12 +69,38 @@ export class PollyNotesReaderStack extends cdk.Stack {
     // TODO: Enable CORS
     const api = new apigateway.RestApi(this, 'polly-notes-api', {
       restApiName: 'Polly Notes Service',
-      description: 'This service manages text notes, and converts them to audio format using Polly.'
+      description: 'This service manages text notes, and converts them to audio format using Polly.',
+      deployOptions: {
+        loggingLevel: apigateway.MethodLoggingLevel.Error,
+        dataTraceEnabled: true
+      }
     });
 
     api.root.addMethod('OPTIONS', new apigateway.MockIntegration());
-    const postMethod = api.root.addMethod('POST', new apigateway.LambdaIntegration(newNotesHandler, { proxy: false }));
+    api.root.addMethod('POST', new apigateway.LambdaIntegration(newNotesHandler, { 
+      proxy: false,
+      // integrationResponses: [new EnableCORSIntegrationResponse()]
+    }));
     // TODO: Add GET method, enable query string parameters (use mappings.json in body mappings)
     // Lambda listening to SNS topic that converts the text to mp3 audio
   }
+}
+
+export class EnableCORSIntegrationResponse implements apigateway.IntegrationResponse {
+  constructor() {
+    this.statusCode = '200';
+    // this.responseParameters = {
+    //   'integration.response.header.Access-Control-Allow-Origin': '\'*\''
+    // };
+    this.responseTemplates = {
+      'application/json': 'Empty'
+    };
+  }
+
+  statusCode: string;  
+  contentHandling?: apigateway.ContentHandling | undefined;
+  responseParameters?: { [destination: string]: string; } | undefined;
+  responseTemplates?: { [contentType: string]: string; } | undefined;
+
+
 }

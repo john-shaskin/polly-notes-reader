@@ -1,12 +1,17 @@
+# Use this version of the lambda, if you want to set up a proxy API Gateway Lambda endpoint
 import boto3
 import os
 import uuid
+import pprint
+import json
 
 def lambda_handler(event, context):
 
+    print('Event object')
+    body = json.loads(event["body"])
     recordId = str(uuid.uuid4())
-    voice = event["voice"]
-    text = event["text"]
+    voice = body["voice"]
+    text = body["text"]
 
     print('Generating new DynamoDB record, with ID: ' + recordId)
     print('Input Text: ' + text)
@@ -31,4 +36,8 @@ def lambda_handler(event, context):
         Message = recordId
     )
 
-    return recordId
+    return {
+        'statusCode': '200',
+        'headers': {},
+        'body': recordId
+    }
