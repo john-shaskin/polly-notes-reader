@@ -50,20 +50,30 @@ export class PollyNotesReaderStack extends cdk.Stack {
         'logs:PutLogEvents'
       ).addAllResources();
 
+    const notesApiRoot = path.join('components', 'notes', 'api');
+    
     // POST new notes
-    const postApiRoot = path.join('components', 'notes', 'api');
     const newNotesHandler = new lambda.Function(this, 'PostNotesHandler', {
       runtime: lambda.Runtime.Python27,
-      code: lambda.Code.asset(postApiRoot),
+      code: lambda.Code.asset(notesApiRoot),
       handler: 'newnote.lambda_handler',
       environment: {
-        'SNS_TOPIC': noteCreatedTopic.topicArn, // TODO: Replace with ARN reference to created SNS topic
+        'SNS_TOPIC': noteCreatedTopic.topicArn,
         'DB_TABLE_NAME': notesTable.tableName
       }
     });
     newNotesHandler.addToRolePolicy(lambdaPolicyStatement);
 
     // GET notes
+    const getNotesHandler = new lambda.Function(this, 'GetNotesHandler', {
+      runtime: lambda.Runtime.Python27,
+      code: lambda.Code.asset(notesApiRoot),
+      handler: 'getnotes.lambda_handler',
+      environment: {
+        'DB_TABLE_NAME': notesTable.tableName
+      }
+    });
+    getNotesHandler.addToRolePolicy(lambdaPolicyStatement);
 
     // API gateway with lambda endpoints
     // TODO: Enable CORS
@@ -76,12 +86,19 @@ export class PollyNotesReaderStack extends cdk.Stack {
       }
     });
 
-    api.root.addMethod('OPTIONS', new apigateway.MockIntegration());
+    // api.root.addMethod('OPTIONS', new apigateway.MockIntegration());
     api.root.addMethod('POST', new apigateway.LambdaIntegration(newNotesHandler, { 
       proxy: false,
       // integrationResponses: [new EnableCORSIntegrationResponse()]
+      // methodResponses: TODO
     }));
-    // TODO: Add GET method, enable query string parameters (use mappings.json in body mappings)
+    // TODO: Enable query string parameters (use mappings.json in body mappings)
+    api.root.addMethod('GET', new apigateway.LambdaIntegration(getNotesHandler, {
+      proxy: false,
+      // requestParameters: {
+      //   'method.request.querystring.noteId': 'integration.request.querystring.noteId'
+      // }
+    }));
     // Lambda listening to SNS topic that converts the text to mp3 audio
   }
 }
@@ -101,6 +118,4 @@ export class EnableCORSIntegrationResponse implements apigateway.IntegrationResp
   contentHandling?: apigateway.ContentHandling | undefined;
   responseParameters?: { [destination: string]: string; } | undefined;
   responseTemplates?: { [contentType: string]: string; } | undefined;
-
-
 }
