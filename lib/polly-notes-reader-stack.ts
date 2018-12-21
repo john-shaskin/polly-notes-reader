@@ -10,6 +10,7 @@ import path = require('path');
 export class PollyNotesReaderStack extends cdk.Stack {
   constructor(parent: cdk.App, name: string, props?: cdk.StackProps) {
     super(parent, name, props);
+
     // s3 bucket for static public website
     // TODO: How do we push the static content to the s3 bucket on deploy?
     const websiteBucket = new s3.Bucket(this, 'PollyReaderStaticWebsite', {
@@ -19,7 +20,7 @@ export class PollyNotesReaderStack extends cdk.Stack {
     websiteBucket.grantPublicAccess('*', 's3:GetObject');
 
     // s3 bucket for dropping mp3s
-    new s3.Bucket(this, 'PollyReaderMP3Bucket');
+    const mp3Bucket = new s3.Bucket(this, 'PollyReaderMP3Bucket');
 
     // DynamoDB table to store notes
     const notesTable = new dynamoDb.Table(this, 'NotesTable', {
@@ -99,7 +100,20 @@ export class PollyNotesReaderStack extends cdk.Stack {
       //   'method.request.querystring.noteId': 'integration.request.querystring.noteId'
       // }
     }));
+
     // Lambda listening to SNS topic that converts the text to mp3 audio
+    const notesWorkerRoot = path.join('components', 'notes', 'workers');
+    const convertToMp3Worker = new lambda.Function(this, "ConvertToMp3Worker", {
+      runtime: lambda.Runtime.Python27,
+      code: lambda.Code.asset(notesWorkerRoot),
+      handler: 'convertoaudio.lambda_handler',
+      environment: {
+        'DB_TABLE_NAME': notesTable.tableName,
+        'BUCKET_NAME': mp3Bucket.bucketName
+      },
+    });
+    convertToMp3Worker.addToRolePolicy(lambdaPolicyStatement);
+    noteCreatedTopic.subscribeLambda(convertToMp3Worker);
   }
 }
 
