@@ -1,6 +1,11 @@
 {
   "name": "polly-notes-reader",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:john-shaskin/polly-notes-reader.git"
+  },
+  "license": "ISC",
   "bin": {
     "polly-notes-reader": "bin/polly-notes-reader.js"
   },
@@ -20,6 +25,7 @@
     "@aws-cdk/aws-iam": "^0.20.0",
     "@aws-cdk/aws-lambda": "^0.20.0",
     "@aws-cdk/aws-s3": "^0.20.0",
+    "@aws-cdk/aws-s3-deployment": "^0.20.0",
     "@aws-cdk/aws-sns": "^0.20.0",
     "@aws-cdk/cdk": "^0.20.0"
   }

@@ -1,4 +1,4 @@
-var API_ENDPOINT = "https://hpnkchzk62.execute-api.eu-west-1.amazonaws.com/dev"
+var API_ENDPOINT = "https://abjzv4qfsc.execute-api.us-west-2.amazonaws.com/prod"
 
 document.getElementById("sayButton").onclick = function(){
 
@@ -13,7 +13,7 @@ document.getElementById("sayButton").onclick = function(){
 	      data:  JSON.stringify(inputData)  ,
 	      contentType: 'application/json; charset=utf-8',
 	      success: function (response) {
-					document.getElementById("postIDreturned").textContent="Post ID: " + response;
+					document.getElementById("noteIdreturned").textContent="Post ID: " + response;
 	      },
 	      error: function () {
 	          alert("error");
@@ -24,11 +24,11 @@ document.getElementById("sayButton").onclick = function(){
 
 document.getElementById("searchButton").onclick = function(){
 
-	var postId = $('#postId').val();
+	var noteId = $('#noteId').val();
 
 
 	$.ajax({
-				url: API_ENDPOINT + '?postId='+postId,
+				url: API_ENDPOINT + '?noteId='+ noteId,
 				type: 'GET',
 				success: function (response) {
 

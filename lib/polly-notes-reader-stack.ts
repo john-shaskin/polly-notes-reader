@@ -4,6 +4,7 @@ import dynamoDb = require('@aws-cdk/aws-dynamodb');
 import lambda = require('@aws-cdk/aws-lambda');
 import iam = require('@aws-cdk/aws-iam');
 import s3 = require('@aws-cdk/aws-s3');
+import s3Deployment = require('@aws-cdk/aws-s3-deployment');
 import sns = require('@aws-cdk/aws-sns');
 import path = require('path');
 
@@ -18,6 +19,11 @@ export class PollyNotesReaderStack extends cdk.Stack {
       websiteErrorDocument: 'error.html'
     });
     websiteBucket.grantPublicAccess('*', 's3:GetObject');
+
+    new s3Deployment.BucketDeployment(this, 'PollyReaderStaticAssets', {
+      source: s3Deployment.Source.asset('./web'),
+      destinationBucket: websiteBucket
+    });
 
     // s3 bucket for dropping mp3s
     const mp3Bucket = new s3.Bucket(this, 'PollyReaderMP3Bucket');
