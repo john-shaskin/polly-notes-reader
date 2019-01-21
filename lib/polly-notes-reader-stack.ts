@@ -13,7 +13,6 @@ export class PollyNotesReaderStack extends cdk.Stack {
     super(parent, name, props);
 
     // s3 bucket for static public website
-    // TODO: How do we push the static content to the s3 bucket on deploy?
     const websiteBucket = new s3.Bucket(this, 'PollyReaderStaticWebsite', {
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'error.html'
