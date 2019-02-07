@@ -20,13 +20,13 @@
     "aws-cdk": "^0.19.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^0.20.0",
-    "@aws-cdk/aws-dynamodb": "^0.20.0",
-    "@aws-cdk/aws-iam": "^0.20.0",
-    "@aws-cdk/aws-lambda": "^0.20.0",
-    "@aws-cdk/aws-s3": "^0.20.0",
-    "@aws-cdk/aws-s3-deployment": "^0.20.0",
-    "@aws-cdk/aws-sns": "^0.20.0",
-    "@aws-cdk/cdk": "^0.20.0"
+    "@aws-cdk/aws-apigateway": "^0.23.0",
+    "@aws-cdk/aws-dynamodb": "^0.23.0",
+    "@aws-cdk/aws-iam": "^0.23.0",
+    "@aws-cdk/aws-lambda": "^0.23.0",
+    "@aws-cdk/aws-s3": "^0.23.0",
+    "@aws-cdk/aws-s3-deployment": "^0.23.0",
+    "@aws-cdk/aws-sns": "^0.23.0",
+    "@aws-cdk/cdk": "^0.23.0"
   }
 }

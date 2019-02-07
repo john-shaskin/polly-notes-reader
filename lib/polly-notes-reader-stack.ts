@@ -99,13 +99,17 @@ export class PollyNotesReaderStack extends cdk.Stack {
       // integrationResponses: [new EnableCORSIntegrationResponse()]
       // methodResponses: TODO
     }));
-    // TODO: Enable query string parameters (use mappings.json in body mappings)
+    
     api.root.addMethod('GET', new apigateway.LambdaIntegration(getNotesHandler, {
       proxy: false,
-      // requestParameters: {
-      //   'method.request.querystring.noteId': 'integration.request.querystring.noteId'
-      // }
-    }));
+      requestParameters: {
+        'integration.request.querystring.noteId': 'method.request.querystring.noteId'
+      }
+    }), {
+      requestParameters: {
+        'method.request.querystring.noteId': true
+      }
+    });
 
     // Lambda listening to SNS topic that converts the text to mp3 audio
     const notesWorkerRoot = path.join('components', 'notes', 'workers');
